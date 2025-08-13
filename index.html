@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Education Initiatives Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .card h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: scale(1.05);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .filter-select:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        .initiatives-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .initiative-item {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .initiative-item:hover {
+            background: #f8f9fa;
+            border-color: #3498db;
+        }
+
+        .initiative-name {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .initiative-meta {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .initiative-type {
+            background: #3498db;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+        }
+
+        .initiative-region {
+            background: #e74c3c;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+        }
+
+        .initiative-overview {
+            color: #555;
+            font-size: 0.95em;
+            line-height: 1.4;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .link-button {
+            background: #3498db;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 10px;
+            transition: background 0.3s ease;
+        }
+
+        .link-button:hover {
+            background: #2980b9;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                padding: 15px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>AI Education Initiatives Dashboard</h1>
+            <p>Comprehensive overview of global AI education programs and initiatives</p>
+            <div style="margin-top: 15px;">
+                <input type="file" id="fileInput" accept=".xlsx,.xls" style="margin-right: 10px; padding: 8px;">
+                <button id="loadFileBtn" style="padding: 10px 20px; background: #2ecc71; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">
+                    📁 Load Excel File
+                </button>
+                <button id="refreshBtn" style="margin-left: 10px; padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">
+                    🔄 Refresh Data
+                </button>
+            </div>
+            <div id="statusMessage" style="margin-top: 10px; font-size: 14px; color: #ecf0f1;"></div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalInitiatives">21</div>
+                <div class="stat-label">Total Initiatives</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalRegions">10</div>
+                <div class="stat-label">Regions Covered</div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card">
+                <h3>Distribution by Type</h3>
+                <div class="chart-container">
+                    <canvas id="typeChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Distribution by Region</h3>
+                <div class="chart-container">
+                    <canvas id="regionChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card" style="grid-column: 1 / -1;">
+                <h3>Initiative Explorer</h3>
+                <div class="filters">
+                    <select class="filter-select" id="typeFilter">
+                        <option value="">All Types</option>
+                    </select>
+                    <select class="filter-select" id="regionFilter">
+                        <option value="">All Regions</option>
+                    </select>
+                    <input type="text" class="filter-select" id="searchFilter" placeholder="Search initiatives...">
+                </div>
+                <div class="initiatives-list" id="initiativesList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for detailed view -->
+    <div id="initiativeModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let aiEducationData = [];
+        let filteredData = [];
+
+        // Load data from Excel file
+        async function loadDataFromExcel() {
+            try {
+                // Try to read from uploaded file first
+                const response = await window.fs.readFile('Updated_AI_Education_Initiatives.xlsx');
+                const workbook = XLSX.read(response, {
+                    cellStyles: true,
+                    cellFormulas: true,
+                    cellDates: true,
+                    cellNF: true,
+                    sheetStubs: true
+                });
+                
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rawData = XLSX.utils.sheet_to_json(worksheet);
+                aiEducationData = consolidateTypes(rawData);
+                filteredData = aiEducationData;
+                
+                updateStatus(`✅ Loaded ${aiEducationData.length} initiatives from uploaded file`);
+                return true;
+            } catch (error) {
+                updateStatus(`ℹ️ Using sample data (${getDefaultData().length} initiatives). Upload your Excel file to load custom data.`);
+                aiEducationData = consolidateTypes(getDefaultData());
+                filteredData = aiEducationData;
+                return false;
+            }
+        }
+
+        // Load data from user-selected file
+        async function loadDataFromFile(file) {
+            try {
+                updateStatus('📖 Reading Excel file...');
+                
+                const arrayBuffer = await file.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer, {
+                    cellStyles: true,
+                    cellFormulas: true,
+                    cellDates: true,
+                    cellNF: true,
+                    sheetStubs: true
+                });
+                
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rawData = XLSX.utils.sheet_to_json(worksheet);
+                aiEducationData = consolidateTypes(rawData);
+                filteredData = aiEducationData;
+                
+                updateStatus(`✅ Successfully loaded ${aiEducationData.length} initiatives from ${file.name}`);
+                
+                // Refresh the dashboard
+                populateFilters();
+                renderCharts();
+                renderInitiatives();
+                
+                return true;
+            } catch (error) {
+                updateStatus(`❌ Error reading file: ${error.message}`);
+                return false;
+            }
+        }
+
+        // Consolidate initiative types into main categories
+        function consolidateTypes(data) {
+            return data.map(item => {
+                let consolidatedType = item.Type;
+                
+                // Tools and Resources category
+                if (['Tool', 'Resources', 'Toolkit', 'Assessment Tool', 'Platform', 'EdTech'].some(type => 
+                    item.Type.toLowerCase().includes(type.toLowerCase()))) {
+                    consolidatedType = 'Tools & Resources';
+                }
+                // Policy and Frameworks category
+                else if (['Policy', 'Framework', 'Policy Framework', 'Policy Initiative', 'National Initiative'].some(type => 
+                    item.Type.toLowerCase().includes(type.toLowerCase()))) {
+                    consolidatedType = 'Policy & Framework';
+                }
+                // Research and Observatory category
+                else if (['Observatory', 'Research', 'Case Study'].some(type => 
+                    item.Type.toLowerCase().includes(type.toLowerCase()))) {
+                    consolidatedType = 'Research & Observatory';
+                }
+                // Education and Training category
+                else if (['Course', 'Curriculum', 'Learning Model', 'Mentorship'].some(type => 
+                    item.Type.toLowerCase().includes(type.toLowerCase()))) {
+                    consolidatedType = 'Education & Training';
+                }
+                // Project category (keep as is for specific projects)
+                else if (item.Type === 'Project') {
+                    consolidatedType = 'Project';
+                }
+                
+                return {
+                    ...item,
+                    Type: consolidatedType
+                };
+            });
+        }
+
+        // Update status message
+        function updateStatus(message) {
+            const statusEl = document.getElementById('statusMessage');
+            if (statusEl) {
+                statusEl.textContent = message;
+            }
+        }
+
+        // Get default/sample data
+        function getDefaultData() {
+            return [
+                {"Initiative Name": "EdTech Hub's AI Observatory", "Overview": "A global initiative aimed at equipping education decision-makers with insights into AI's role in addressing learning challenges.", "Features": "Regular publications like 'Waypoints & Signals'; Focus on enabling environment for AI in education", "Relevance": "Provides a model for tracking and summarizing AI initiatives globally.", "Type": "Research & Observatory", "Region/Country": "Global", "Link": "EdTech Hub"},
+                {"Initiative Name": "European Education Area – Digital Education Action Plan", "Overview": "An EU initiative promoting digital education across member states.", "Features": "Ethical guidelines for AI and data use; Collaboration between member states", "Relevance": "Offers a policy framework that can inform the strategic aspects of our dashboard.", "Type": "Policy & Framework", "Region/Country": "European Union", "Link": "Education Europa - Home"},
+                {"Initiative Name": "AI4EDU", "Overview": "A European project focusing on integrating AI into teaching and learning.", "Features": "Emphasis on ethical, transparent, and inclusive AI use; Resources for learning with and about AI", "Relevance": "Provides practical tools and frameworks that can be incorporated into our dashboard.", "Type": "Project", "Region/Country": "Europe", "Link": "AI4edu"},
+                {"Initiative Name": "ISTE's AI in Education Resources", "Overview": "The International Society for Technology in Education offers resources for educators on AI integration.", "Features": "Professional development courses; Guidelines for ethical AI use", "Relevance": "Can inform the practical teaching tools section of our dashboard.", "Type": "Tools & Resources", "Region/Country": "Global", "Link": "ISTE"},
+                {"Initiative Name": "OpenAI's ChatGPT for Educators", "Overview": "OpenAI provides specific guidance and resources for educators using ChatGPT in educational settings.", "Features": "Teaching guides; Safety and policy considerations", "Relevance": "Offers practical examples of how AI tools can be integrated into teaching.", "Type": "Tools & Resources", "Region/Country": "Global", "Link": "Teaching with AI"},
+                {"Initiative Name": "MIT's Teaching and Learning with AI", "Overview": "MIT's initiative to explore how AI can transform teaching and learning experiences.", "Features": "Case studies; Best practices for AI integration", "Relevance": "Provides research-backed insights that can inform our dashboard's content.", "Type": "Research & Observatory", "Region/Country": "Global", "Link": "MIT Teaching Systems Lab"},
+                {"Initiative Name": "UNESCO's AI and Education Framework", "Overview": "UNESCO's comprehensive framework for AI in education, focusing on policy and ethical considerations.", "Features": "Policy recommendations; Ethical AI guidelines; Capacity building resources", "Relevance": "Offers a global perspective on AI education policy that can guide our dashboard's strategic elements.", "Type": "Policy & Framework", "Region/Country": "Global", "Link": "UNESCO AI and Education"},
+                {"Initiative Name": "Singapore's AI for Education Initiative", "Overview": "Singapore's national initiative to integrate AI into its education system.", "Features": "AI literacy programs; Teacher training; Ethical AI use", "Relevance": "Provides a national-level case study for AI education implementation.", "Type": "Policy & Framework", "Region/Country": "Singapore", "Link": "MOE Singapore"},
+                {"Initiative Name": "Coursera's AI for Everyone Course", "Overview": "A popular online course that makes AI concepts accessible to a broad audience.", "Features": "Non-technical AI education; Real-world applications", "Relevance": "Can inform the design of accessible AI education content for our dashboard.", "Type": "Education & Training", "Region/Country": "Global", "Link": "Coursera AI for Everyone"},
+                {"Initiative Name": "Google's AI Education Toolkit", "Overview": "Google's comprehensive toolkit for educators to teach AI concepts and ethics.", "Features": "Lesson plans; Interactive activities; Ethics modules", "Relevance": "Provides ready-to-use educational resources that can be referenced in our dashboard.", "Type": "Tools & Resources", "Region/Country": "Global", "Link": "Google AI Education"},
+                {"Initiative Name": "Carnegie Mellon's AI4ALL Program", "Overview": "A program aimed at increasing diversity and inclusion in AI education.", "Features": "Summer programs; Mentorship; Focus on underrepresented groups", "Relevance": "Highlights the importance of inclusivity in AI education, which should be reflected in our dashboard.", "Type": "Education & Training", "Region/Country": "United States", "Link": "AI4ALL"},
+                {"Initiative Name": "Khan Academy's AI Guide for Educators", "Overview": "Khan Academy's resource for educators on integrating AI tools like Khanmigo into teaching.", "Features": "Practical teaching applications; Student engagement tools", "Relevance": "Offers examples of AI-powered personalized learning that can inform our dashboard.", "Type": "Tools & Resources", "Region/Country": "Global", "Link": "Khan Academy AI Guide"},
+                {"Initiative Name": "Partnership on AI's Education Initiative", "Overview": "A collaborative effort among AI companies to promote responsible AI education.", "Features": "Research publications; Best practice sharing", "Relevance": "Provides industry insights on responsible AI education practices.", "Type": "Research & Observatory", "Region/Country": "Global", "Link": "Partnership on AI"},
+                {"Initiative Name": "e-Estonia's AI in Education", "Overview": "Estonia's national program integrating AI into its digital education ecosystem.", "Features": "Digital citizenship; AI literacy; Government-backed implementation", "Relevance": "Showcases a national-level digital transformation that includes AI education.", "Type": "Tools & Resources", "Region/Country": "Estonia", "Link": "e-Estonia"},
+                {"Initiative Name": "China's AI + Education Initiative", "Overview": "China's national strategy to integrate AI across all levels of education.", "Features": "Personalized learning; Teacher training; Large-scale implementation", "Relevance": "Provides insights into large-scale AI education deployment.", "Type": "Policy & Framework", "Region/Country": "China", "Link": "China AI Education"},
+                {"Initiative Name": "Australia's AI in Education Policy", "Overview": "Australia's framework for the ethical and effective use of AI in education.", "Features": "Policy guidelines; Risk management; Teacher support", "Relevance": "Offers a balanced approach to AI education policy that considers both opportunities and challenges.", "Type": "Policy & Framework", "Region/Country": "Australia", "Link": "Australian Government Education"},
+                {"Initiative Name": "Brazil's AI Education for All", "Overview": "Brazil's initiative to democratize AI education across diverse populations.", "Features": "Multilingual resources; Focus on accessibility; Public-private partnerships", "Relevance": "Demonstrates approaches to making AI education inclusive and accessible.", "Type": "Policy & Framework", "Region/Country": "Brazil", "Link": "Brazil AI Education"},
+                {"Initiative Name": "Africa Code Week AI Module", "Overview": "An extension of Africa Code Week focusing on AI literacy across African countries.", "Features": "Coding and AI integration; Youth focus; Pan-African reach", "Relevance": "Shows how AI education can be adapted for different regional contexts and needs.", "Type": "Education & Training", "Region/Country": "Africa", "Link": "Africa Code Week"},
+                {"Initiative Name": "South Korea's AI Education Master Plan", "Overview": "South Korea's comprehensive plan to integrate AI education from elementary to higher education.", "Features": "Curriculum integration; Teacher training; Digital infrastructure", "Relevance": "Provides a systematic approach to national AI education implementation.", "Type": "Policy & Framework", "Region/Country": "South Korea", "Link": "Korea AI Education"},
+                {"Initiative Name": "UAE's AI in Education Strategy", "Overview": "UAE's strategy to position itself as a global leader in AI-powered education.", "Features": "Smart learning environments; AI-powered assessment; Innovation focus", "Relevance": "Demonstrates how AI education can be aligned with national innovation strategies.", "Type": "Policy & Framework", "Region/Country": "UAE", "Link": "UAE AI Education"},
+                {"Initiative Name": "EdTechHub AI Readiness Toolkit", "Overview": "A practical toolkit helping education systems assess and improve their readiness for AI integration.", "Features": "Assessment frameworks; Implementation guides; Policy templates", "Relevance": "Provides methodologies that can be incorporated into our dashboard's assessment components.", "Type": "Tools & Resources", "Region/Country": "Global", "Link": "EdTech Hub Toolkit"}
+            ];
+        }
+
+        // Initialize dashboard
+        async function initializeDashboard() {
+            // Show loading indicator
+            document.getElementById('initiativesList').innerHTML = '<div style="text-align: center; padding: 20px;">Loading data...</div>';
+            
+            // Load data from Excel
+            const loaded = await loadDataFromExcel();
+            
+            if (loaded) {
+                // Successfully loaded data from Excel file
+            } else {
+                // Using fallback data
+            }
+            
+            populateFilters();
+            renderCharts();
+            renderInitiatives();
+            setupEventListeners();
+        }
+
+        // Populate filter dropdowns
+        function populateFilters() {
+            const typeFilter = document.getElementById('typeFilter');
+            const regionFilter = document.getElementById('regionFilter');
+            
+            const types = [...new Set(aiEducationData.map(item => item.Type))].sort();
+            const regions = [...new Set(aiEducationData.map(item => item['Region/Country']))].sort();
+            
+            types.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+                typeFilter.appendChild(option);
+            });
+            
+            regions.forEach(region => {
+                const option = document.createElement('option');
+                option.value = region;
+                option.textContent = region;
+                regionFilter.appendChild(option);
+            });
+        }
+
+        // Render charts
+        function renderCharts() {
+            renderTypeChart();
+            renderRegionChart();
+        }
+
+        function renderTypeChart() {
+            const ctx = document.getElementById('typeChart').getContext('2d');
+            const typeCounts = {};
+            
+            aiEducationData.forEach(item => {
+                const type = item.Type;
+                typeCounts[type] = (typeCounts[type] || 0) + 1;
+            });
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(typeCounts),
+                    datasets: [{
+                        data: Object.values(typeCounts),
+                        backgroundColor: [
+                            '#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6',
+                            '#1abc9c', '#34495e', '#e67e22', '#95a5a6', '#d35400',
+                            '#8e44ad', '#27ae60', '#2980b9', '#c0392b', '#16a085'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderRegionChart() {
+            const ctx = document.getElementById('regionChart').getContext('2d');
+            const regionCounts = {};
+            
+            aiEducationData.forEach(item => {
+                const region = item['Region/Country'];
+                regionCounts[region] = (regionCounts[region] || 0) + 1;
+            });
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(regionCounts),
+                    datasets: [{
+                        label: 'Number of Initiatives',
+                        data: Object.values(regionCounts),
+                        backgroundColor: '#3498db',
+                        borderColor: '#2980b9',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Render initiatives list
+        function renderInitiatives() {
+            const initiativesList = document.getElementById('initiativesList');
+            initiativesList.innerHTML = '';
+            
+            filteredData.forEach((initiative, index) => {
+                const item = document.createElement('div');
+                item.className = 'initiative-item';
+                item.onclick = () => showInitiativeModal(initiative);
+                
+                item.innerHTML = `
+                    <div class="initiative-name">${initiative['Initiative Name']}</div>
+                    <div class="initiative-meta">
+                        <span class="initiative-type">${initiative.Type}</span>
+                        <span class="initiative-region">${initiative['Region/Country']}</span>
+                    </div>
+                    <div class="initiative-overview">${initiative.Overview}</div>
+                `;
+                
+                initiativesList.appendChild(item);
+            });
+            
+            // Update stats
+            document.getElementById('totalInitiatives').textContent = filteredData.length;
+        }
+
+        // Map link names to actual URLs
+        function getLinkUrl(linkText) {
+            if (!linkText || linkText.trim() === '') return null;
+            
+            const linkText_lower = linkText.toLowerCase().trim();
+            
+            // Map of common link names to actual URLs
+            const linkMappings = {
+                'edtech hub': 'https://edtechhub.org/',
+                'education europa - home': 'https://education.ec.europa.eu/',
+                'ai4edu': 'https://ai4edu.eu/',
+                'iste': 'https://www.iste.org/ai',
+                'teaching with ai': 'https://openai.com/blog/teaching-with-ai',
+                'mit teaching systems lab': 'https://tsl.mit.edu/',
+                'unesco ai and education': 'https://www.unesco.org/en/artificial-intelligence/education',
+                'moe singapore': 'https://www.moe.gov.sg/',
+                'coursera ai for everyone': 'https://www.coursera.org/learn/ai-for-everyone',
+                'google ai education': 'https://ai.google/education/',
+                'ai4all': 'https://ai-4-all.org/',
+                'khan academy ai guide': 'https://www.khanacademy.org/khan-labs',
+                'partnership on ai': 'https://partnershiponai.org/',
+                'e-estonia': 'https://e-estonia.com/',
+                'china ai education': 'https://english.www.gov.cn/',
+                'australian government education': 'https://www.education.gov.au/',
+                'brazil ai education': 'https://www.gov.br/mec/',
+                'africa code week': 'https://africacodeweek.org/',
+                'korea ai education': 'https://english.moe.go.kr/',
+                'uae ai education': 'https://u.ae/en/about-the-uae/strategies-initiatives-and-awards/federal-governments-strategies-and-plans/uae-strategy-for-artificial-intelligence-2031',
+                'edtech hub toolkit': 'https://edtechhub.org/toolkit/'
+            };
+            
+            // Check if we have a direct mapping
+            if (linkMappings[linkText_lower]) {
+                return linkMappings[linkText_lower];
+            }
+            
+            // If it's already a URL, use it
+            if (linkText.startsWith('http://') || linkText.startsWith('https://')) {
+                return linkText;
+            }
+            
+            // If it looks like a domain, add https://
+            if (linkText.includes('.') && !linkText.includes(' ') && linkText.length < 50) {
+                return 'https://' + linkText;
+            }
+            
+            // For unknown links, create a targeted search
+            return `https://www.google.com/search?q=${encodeURIComponent(linkText + ' official website')}`;
+        }
+
+        // Show initiative modal
+        function showInitiativeModal(initiative) {
+            const modal = document.getElementById('initiativeModal');
+            const modalContent = document.getElementById('modalContent');
+            
+            // Create the link HTML
+            let linkHtml = '';
+            if (initiative.Link && initiative.Link.trim() !== '') {
+                const linkUrl = getLinkUrl(initiative.Link);
+                if (linkUrl) {
+                    linkHtml = `<a href="${linkUrl}" target="_blank" class="link-button">Visit Resource</a>`;
+                }
+            }
+            
+            modalContent.innerHTML = `
+                <h2>${initiative['Initiative Name']}</h2>
+                <div style="margin: 20px 0;">
+                    <span class="initiative-type" style="margin-right: 10px;">${initiative.Type}</span>
+                    <span class="initiative-region">${initiative['Region/Country']}</span>
+                </div>
+                <h3>Overview</h3>
+                <p style="margin-bottom: 15px; line-height: 1.6;">${initiative.Overview}</p>
+                <h3>Features</h3>
+                <p style="margin-bottom: 15px; line-height: 1.6;">${initiative.Features}</p>
+                <h3>Relevance</h3>
+                <p style="margin-bottom: 15px; line-height: 1.6;">${initiative.Relevance}</p>
+                ${linkHtml}
+            `;
+            
+            modal.style.display = 'block';
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            const typeFilter = document.getElementById('typeFilter');
+            const regionFilter = document.getElementById('regionFilter');
+            const searchFilter = document.getElementById('searchFilter');
+            const refreshBtn = document.getElementById('refreshBtn');
+            const modal = document.getElementById('initiativeModal');
+            const closeBtn = document.getElementsByClassName('close')[0];
+            
+            typeFilter.addEventListener('change', applyFilters);
+            regionFilter.addEventListener('change', applyFilters);
+            searchFilter.addEventListener('input', applyFilters);
+            
+            // Refresh button functionality
+            refreshBtn.addEventListener('click', async () => {
+                refreshBtn.innerHTML = '🔄 Loading...';
+                refreshBtn.disabled = true;
+                
+                await loadDataFromExcel();
+                populateFilters();
+                renderCharts();
+                renderInitiatives();
+                
+                refreshBtn.innerHTML = '🔄 Refresh Data';
+                refreshBtn.disabled = false;
+            });
+            
+            closeBtn.onclick = () => modal.style.display = 'none';
+            window.onclick = (event) => {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            };
+        }
+
+        // Apply filters
+        function applyFilters() {
+            const typeFilter = document.getElementById('typeFilter').value;
+            const regionFilter = document.getElementById('regionFilter').value;
+            const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+            
+            filteredData = aiEducationData.filter(item => {
+                const matchesType = !typeFilter || item.Type === typeFilter;
+                const matchesRegion = !regionFilter || item['Region/Country'] === regionFilter;
+                const matchesSearch = !searchFilter || 
+                    item['Initiative Name'].toLowerCase().includes(searchFilter) ||
+                    item.Overview.toLowerCase().includes(searchFilter) ||
+                    item.Features.toLowerCase().includes(searchFilter);
+                
+                return matchesType && matchesRegion && matchesSearch;
+            });
+            
+            renderInitiatives();
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeDashboard);
+    </script>
+</body>
+</html>
